@@ -215,3 +215,8 @@ set hive.enforce.bucketing=true;
 
 INSERT INTO TABLE orders_bucketed
 SELECT * from order_sequence;
+
+/***INSERT OVERWITE****/               //use to store sql query to hive
+INSERT OVERWITE  LOCAL DIRECTORY '/home/phiripatrick663/orders_by_status'
+SELECT orders_status, count(1) from orders_another
+GROUP BY orders_status;
