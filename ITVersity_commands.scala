@@ -210,3 +210,8 @@ CLUSTERED BY (order_id) INTO 16 BUCKETS
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '|'
 STORED AS TEXTFILE;
+
+set hive.enforce.bucketing=true;
+
+INSERT INTO TABLE orders_bucketed
+SELECT * from order_sequence;
