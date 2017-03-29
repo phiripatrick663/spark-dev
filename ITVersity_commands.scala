@@ -170,12 +170,43 @@ ALTER TABLE stocks_eod_list ADD PARTITION (tradeyear=2003);
 ALTER TABLE stocks_eod_list ADD PARTITION (tradeyear=2004);
 ALTER TABLE stocks_eod_list ADD PARTITION (tradeyear=2005);
 
-LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2001);  //loading from local file system,preformatted data
+LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2001);         //loading from local file system,preformatted data
 LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2002);
 LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2003);
 LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2004);
 LOAD DATA LOCAL INPATH '/data/nyse/' INTO TABLE stocks_eod_list PARTITION(tradeyear=2005);
 
-INSERT INTO TABLE stocks_eod_list PARTITION (tradeyear)  //USE if there is transformation of data
+INSERT INTO TABLE stocks_eod_list PARTITION (tradeyear)                                                            //USE if there is transformation of data
 SELECT t.* cast(substr(tradedate, 1,4) as int) tradeyear
 FROM stocks_eod_managed t;
+
+CREATE TABLE orders_another(
+	`order_id` string,
+	`order_date` string,
+	`order_customer_id` int,
+	`orders_status` varchar(45)
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '|'
+STORED AS INPUTFORMAT 'org.apache.hadoop.hive.mapred.TextInputFormat'
+OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat';
+
+LOAD DATA LOCAL INPATH '/data/nyse'  INTO TABLE orders_another;   //If file format is mismatched NULL values will be loaded into table
+
+/**validate**/
+describe formatted orders_another;                                                                                                       //get file location
+dfs -ls hdfs://nn01.itversity.com:8020/apps/hive/warehouse/phiripatrick663.db/orders_another;
+hdfs fsck hdfs://nn01.itversity.com:8020/apps/hive/warehouse/phiripatrick663.db/orders_another -files -location -blocks  //get metadata
+
+/***CLUSTERED BY is HASH partitioning***/
+//gives better uniform distribution
+CREATE TABLE orders_bucketed(
+	`order_id` string,
+	`order_date` string,
+	`order_customer_id` int,
+	`orders_status` varchar(45)
+)
+CLUSTERED BY order_id INTO 16 BUCKETS
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '|'
+STORED AS TEXTFILE;
