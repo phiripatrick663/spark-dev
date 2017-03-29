@@ -200,13 +200,13 @@ hdfs fsck hdfs://nn01.itversity.com:8020/apps/hive/warehouse/phiripatrick663.db/
 
 /***CLUSTERED BY is HASH partitioning***/
 //gives better uniform distribution
-CREATE TABLE orders_bucketed(
+CREATE TABLE `orders_bucketed` (
 	`order_id` string,
 	`order_date` string,
 	`order_customer_id` int,
 	`orders_status` varchar(45)
 )
-CLUSTERED BY order_id INTO 16 BUCKETS
+CLUSTERED BY (order_id) INTO 16 BUCKETS
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY '|'
 STORED AS TEXTFILE;
